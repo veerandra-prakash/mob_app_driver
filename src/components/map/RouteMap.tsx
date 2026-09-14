@@ -24,6 +24,7 @@ const isValidCoordinate = (lat?: number, lon?: number): boolean => {
 };
 
 export const RouteMap: React.FC<RouteMapProps> = ({
+  route,
   truckLocation,
   stops,
   currentStopId,
@@ -31,6 +32,13 @@ export const RouteMap: React.FC<RouteMapProps> = ({
 }) => {
   // Extract valid ordered coordinates for Polyline
   const routeCoordinates = useMemo(() => {
+    if (route?.routeCoordinates && route.routeCoordinates.length > 0) {
+      return route.routeCoordinates.map((coord: [number, number]) => ({
+        lat: coord[0],
+        lng: coord[1],
+      }));
+    }
+
     if (!stops || stops.length === 0) return [];
     return [...stops]
       .filter((stop) => isValidCoordinate(stop.latitude, stop.longitude))
@@ -39,7 +47,8 @@ export const RouteMap: React.FC<RouteMapProps> = ({
         lat: stop.latitude,
         lng: stop.longitude,
       }));
-  }, [stops]);
+  }, [route, stops]);
+
 
   // Center calculation
   const center = useMemo(() => {
@@ -48,12 +57,13 @@ export const RouteMap: React.FC<RouteMapProps> = ({
     if (validStops.length === 0) {
       const defaultLat = isValidCoordinate(truckLocation?.latitude, truckLocation?.longitude)
         ? truckLocation!.latitude
-        : 37.7749;
+        : 28.6139;
       const defaultLon = isValidCoordinate(truckLocation?.latitude, truckLocation?.longitude)
         ? truckLocation!.longitude
-        : -122.4194;
+        : 77.2090;
       return { lat: defaultLat, lng: defaultLon };
     }
+
 
     const lats = validStops.map((s) => s.latitude);
     const lons = validStops.map((s) => s.longitude);
@@ -140,7 +150,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
 
-      var coordinates = ${JSON.stringify(routeCoordinates.map((c) => [c.lat, c.lng]))};
+      var coordinates = ${JSON.stringify(routeCoordinates.map((c: { lat: number; lng: number }) => [c.lat, c.lng]))};
       if (coordinates.length > 1) {
         var polyline = L.polyline(coordinates, { color: '#059669', weight: 5, opacity: 0.85 }).addTo(map);
         map.fitBounds(polyline.getBounds().pad(0.2));

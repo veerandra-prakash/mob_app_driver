@@ -74,4 +74,6 @@ export interface Route {
   totalStops: number;
   completedStops: number;
   totalDistanceKm: number;
+  routeCoordinates?: Array<[number, number]>;
 }
+

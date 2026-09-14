@@ -59,20 +59,30 @@ export const useRoute = () => {
   // 5. startRoute()
   const startRoute = useCallback(async (): Promise<Route | null> => {
     const updated = await routeRepository.startRoute();
+    await loadData();
     return updated;
-  }, []);
+  }, [loadData]);
 
   // 6. collectStop(stopId)
   const collectStop = useCallback(async (stopId: string): Promise<RouteStop | null> => {
     const updated = await routeRepository.collectStop(stopId);
+    await loadData();
     return updated;
-  }, []);
+  }, [loadData]);
 
   // 7. skipStop(stopId, reason)
   const skipStop = useCallback(async (stopId: string, reason?: string): Promise<RouteStop | null> => {
     const updated = await routeRepository.skipStop(stopId, reason);
+    await loadData();
     return updated;
-  }, []);
+  }, [loadData]);
+
+  // 8. updateDriverProfile(driverUpdate, truckUpdate)
+  const updateDriverProfile = useCallback(async (driverUpdate: Partial<Driver>, truckUpdate?: Partial<Truck>): Promise<Driver | null> => {
+    const updated = await routeRepository.updateDriverProfile(driverUpdate, truckUpdate);
+    await loadData();
+    return updated;
+  }, [loadData]);
 
   // Subscribe to in-memory state mutations from routeRepository
   useEffect(() => {
@@ -96,5 +106,6 @@ export const useRoute = () => {
     startRoute,
     collectStop,
     skipStop,
+    updateDriverProfile,
   };
 };

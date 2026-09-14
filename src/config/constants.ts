@@ -1,9 +1,20 @@
+const rawApiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://route-optimization-for-smart-waste.onrender.com/api';
+// Strip trailing slash if present
+const formattedApiUrl = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
+
 export const APP_CONFIG = {
   appName: 'EcoCircle Driver',
   version: '1.0.0',
   defaultDriverId: 'DRV-8842',
+  defaultTruckId: 'T1',
   refreshIntervalMs: 15000,
+  apiBaseUrl: formattedApiUrl,
+  useRealBackend: true,
+  pollStateIntervalMs: 1500,
+  pollSystemStatusIntervalMs: 3000,
 };
+
+
 
 export const PICKUP_STATUS = {
   PENDING: 'PENDING',
@@ -26,3 +37,4 @@ export const PRIORITY_LEVEL = {
   MEDIUM: 'MEDIUM',
   HIGH: 'HIGH',
 } as const;
+

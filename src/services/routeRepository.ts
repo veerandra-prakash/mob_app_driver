@@ -35,6 +35,7 @@ export interface IRouteRepository {
   getRouteStopById(stopId: string): Promise<RouteStop | null>;
   getNextStop(routeId?: string): Promise<RouteStop | null>;
   updateTruckLocation(latitude: number, longitude: number, heading?: number, speedKmH?: number): Promise<TruckLocation | null>;
+  updateDriverProfile(driverUpdate: Partial<Driver>, truckUpdate?: Partial<Truck>): Promise<Driver | null>;
   subscribe(listener: () => void): () => void;
 }
 
@@ -283,10 +284,31 @@ class MockRouteRepository implements IRouteRepository {
     return updatedLocation;
   }
 
+  async updateDriverProfile(
+    driverUpdate: Partial<Driver>,
+    truckUpdate?: Partial<Truck>
+  ): Promise<Driver | null> {
+    this.driver = { ...this.driver, ...driverUpdate };
+    if (truckUpdate) {
+      this.truck = { ...this.truck, ...truckUpdate };
+    }
+    this.notifyListeners();
+    return { ...this.driver };
+  }
+
   private simulateLatency(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
+import { APP_CONFIG } from '../config/constants';
+import { ApiRouteRepository } from './apiRouteRepository';
+
 // Singleton repository instance export
-export const routeRepository: IRouteRepository = new MockRouteRepository();
+export const mockRouteRepository = new MockRouteRepository();
+export const apiRouteRepository = new ApiRouteRepository();
+
+export const routeRepository: IRouteRepository = APP_CONFIG.useRealBackend
+  ? apiRouteRepository
+  : mockRouteRepository;
+

@@ -90,15 +90,22 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setIsProcessingAction(true);
       const updated = await startRoute();
-      if (!updated) {
-        Alert.alert('Action Failed', 'Unable to start collection route.');
+      if (!updated || !updated.stops || updated.stops.length === 0) {
+        Alert.alert(
+          'No Active Route',
+          'No collection route was found in the database. Please run Route Optimization and Deploy Fleet in the Admin App first.'
+        );
       }
     } catch (err: any) {
-      Alert.alert('Start Route Error', err?.message || 'Failed to start collection route.');
+      Alert.alert(
+        'Start Route Error',
+        err?.message || 'Please run Route Optimization & Deploy Fleet in the Admin App first.'
+      );
     } finally {
       setIsProcessingAction(false);
     }
   };
+
 
   // Action Handler: Collect Stop with error handling
   const handleCollectStop = async (stopId: string) => {

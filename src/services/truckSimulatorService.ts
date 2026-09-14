@@ -1,4 +1,5 @@
 import { routeRepository } from './routeRepository';
+import { APP_CONFIG } from '../config/constants';
 
 /**
  * Development / Demo-Only T1 Movement Simulator
@@ -6,10 +7,10 @@ import { routeRepository } from './routeRepository';
  * Periodically updates Truck T1 coordinates toward the active IN_PROGRESS stop.
  * When T1 arrives at the stop, movement pauses until the driver performs COLLECT or SKIP.
  * 
- * To remove/disable in production:
- * Set `ENABLE_SIMULATOR = false` or omit calling `useTruckSimulator()`.
+ * Disabled automatically when APP_CONFIG.useRealBackend is true.
  */
-export const ENABLE_SIMULATOR = true;
+export const ENABLE_SIMULATOR = !APP_CONFIG.useRealBackend;
+
 
 class TruckSimulatorService {
   private timerId: ReturnType<typeof setInterval> | null = null;
