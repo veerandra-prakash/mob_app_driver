@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Route, RouteStop, TruckLocation } from '../../types/routeModels';
@@ -143,17 +143,17 @@ export const RouteMap: React.FC<RouteMapProps> = ({
   <div id="map"></div>
   <script>
     try {
-      var map = L.map('map', { zoomControl: false }).setView([${center.lat}, ${center.lng}], 15);
+      window.map = L.map('map', { zoomControl: false }).setView([${center.lat}, ${center.lng}], 15);
       
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+      }).addTo(window.map);
 
       var coordinates = ${JSON.stringify(routeCoordinates.map((c: { lat: number; lng: number }) => [c.lat, c.lng]))};
       if (coordinates.length > 1) {
-        var polyline = L.polyline(coordinates, { color: '#059669', weight: 5, opacity: 0.85 }).addTo(map);
-        map.fitBounds(polyline.getBounds().pad(0.2));
+        window.routePolyline = L.polyline(coordinates, { color: '#059669', weight: 5, opacity: 0.85 }).addTo(window.map);
+        window.map.fitBounds(window.routePolyline.getBounds().pad(0.2));
       }
 
       var stops = ${JSON.stringify(stopsJson)};
@@ -166,7 +166,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
         var iconHtml = '<div class="stop-pin ' + (stop.isCurrent ? 'current-pin' : '') + '" style="background:' + color + ';">' +
                        (stop.isCompleted ? '✓' : stop.sequence) + '</div>';
         var customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [30, 30], iconAnchor: [15, 15] });
-        var marker = L.marker([stop.lat, stop.lng], { icon: customIcon }).addTo(map);
+        var marker = L.marker([stop.lat, stop.lng], { icon: customIcon }).addTo(window.map);
         
         var popupContent = '<b>Stop #' + stop.sequence + ' - ' + stop.name + '</b><br/>' +
                            '📍 ' + stop.address + '<br/>' +
@@ -179,18 +179,6 @@ export const RouteMap: React.FC<RouteMapProps> = ({
           }
         });
       });
-
-      var truck = ${JSON.stringify(truckLocationJson)};
-      if (truck) {
-        var truckIcon = L.divIcon({
-          html: '<div class="truck-pin">🚚</div>',
-          className: '',
-          iconSize: [40, 40],
-          iconAnchor: [20, 20]
-        });
-        var truckMarker = L.marker([truck.lat, truck.lng], { icon: truckIcon, zIndexOffset: 1000 }).addTo(map);
-        truckMarker.bindPopup('<b>Truck T1 (EcoVolt)</b><br/>Speed: ' + truck.speed + ' km/h');
-      }
     } catch(e) {
       console.error(e);
     }
@@ -198,7 +186,45 @@ export const RouteMap: React.FC<RouteMapProps> = ({
 </body>
 </html>
     `;
-  }, [center, routeCoordinates, stopsJson, truckLocationJson]);
+  }, [center, routeCoordinates, stopsJson]);
+
+  const webViewRef = useRef<WebView>(null);
+
+  useEffect(() => {
+    if (webViewRef.current && truckLocationJson) {
+      const pIdx = truckLocation?.pathIndex || 0;
+      const fullCoords = routeCoordinates.map((c: {lat: number, lng: number}) => [c.lat, c.lng]);
+      const sliced = fullCoords.slice(pIdx);
+      
+      const js = `
+        try {
+          if (!window.truckMarker) {
+            var truckIcon = L.divIcon({
+              html: '<div class="truck-pin">🚚</div>',
+              className: '',
+              iconSize: [40, 40],
+              iconAnchor: [20, 20]
+            });
+            window.truckMarker = L.marker([${truckLocationJson.lat}, ${truckLocationJson.lng}], { icon: truckIcon, zIndexOffset: 1000 }).addTo(window.map);
+          } else {
+            window.truckMarker.setLatLng([${truckLocationJson.lat}, ${truckLocationJson.lng}]);
+          }
+          
+          if (window.truckMarker._icon) {
+            window.truckMarker._icon.style.transition = 'transform 1.5s linear';
+          }
+          
+          window.truckMarker.setPopupContent('<b>Truck T1 (EcoVolt)</b><br/>Speed: ${truckLocationJson.speed} km/h');
+          
+          if (window.routePolyline && ${sliced.length} > 0) {
+            window.routePolyline.setLatLngs(${JSON.stringify(sliced)});
+          }
+        } catch(e) {}
+        true;
+      `;
+      webViewRef.current.injectJavaScript(js);
+    }
+  }, [truckLocationJson, routeCoordinates, truckLocation?.pathIndex]);
 
   // Handle messages sent from WebView
   const handleMessage = (event: any) => {
@@ -236,6 +262,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
   return (
     <View style={styles.container}>
       <WebView
+        ref={webViewRef}
         originWhitelist={['*']}
         source={{ html: htmlContent }}
         style={styles.webView}

@@ -17,6 +17,7 @@ export interface TruckLocation {
   heading?: number;
   speedKmH?: number;
   lastUpdated: string;
+  pathIndex?: number;
 }
 
 export interface Driver {

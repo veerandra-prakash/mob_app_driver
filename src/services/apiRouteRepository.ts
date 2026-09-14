@@ -94,7 +94,7 @@ export class ApiRouteRepository implements IRouteRepository {
             longitude: t1State.lng,
             heading: 0,
             speedKmH: t1State.moving ? 20 : 0,
-            lastUpdated: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(), pathIndex: t1State?.path_index,
           };
         }
         await this.fetchRouteInternal(routesRes, t1State);
@@ -162,7 +162,7 @@ export class ApiRouteRepository implements IRouteRepository {
         longitude: 77.209,
         heading: 0,
         speedKmH: 0,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(), pathIndex: t1State?.path_index,
       },
     };
     return { ...base, ...this.customTruck };
@@ -322,7 +322,7 @@ export class ApiRouteRepository implements IRouteRepository {
           longitude: t1State.lng,
           heading: 0,
           speedKmH: t1State.moving ? 20 : 0,
-          lastUpdated: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(), pathIndex: t1State?.path_index,
         };
       }
 
@@ -345,7 +345,7 @@ export class ApiRouteRepository implements IRouteRepository {
             longitude: t1State.lng,
             heading: 0,
             speedKmH: t1State.moving ? 20 : 0,
-            lastUpdated: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(), pathIndex: t1State?.path_index,
           };
         }
       } catch {
@@ -487,7 +487,7 @@ export class ApiRouteRepository implements IRouteRepository {
       longitude,
       heading: heading ?? 0,
       speedKmH: speedKmH ?? 0,
-      lastUpdated: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(), pathIndex: t1State?.path_index,
     };
 
     this.cachedTruckLocation = updatedLocation;
